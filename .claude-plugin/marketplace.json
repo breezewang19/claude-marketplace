@@ -1,0 +1,23 @@
+{
+  "name": "checkpoint-marketplace",
+  "owner": {
+    "name": "CheckPoint Team",
+    "email": "your-email@example.com"
+  },
+  "metadata": {
+    "description": "审查点构建相关插件集合 - 帮助产品经理创建符合规范的审查点内容",
+    "version": "1.0.0",
+    "pluginRoot": "./plugins"
+  },
+  "plugins": [
+    {
+      "name": "checkpoint-architect",
+      "source": "./plugins/checkpoint-architect",
+      "description": "审查点构建助手 - 通过引导式对话创建审查点内容",
+      "version": "2.0.0",
+      "category": "productivity",
+      "tags": ["审查点", "法律", "文档生成"],
+      "strict": true
+    }
+  ]
+}
