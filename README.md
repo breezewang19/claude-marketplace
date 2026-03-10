@@ -19,7 +19,7 @@
 
 ```bash
 # 添加市场
-/plugin marketplace add 你的GitHub用户名/claude-marketplace
+/plugin marketplace add breezewang19-lang/claude-marketplace
 
 # 安装插件
 /plugin install checkpoint-architect@checkpoint-marketplace
