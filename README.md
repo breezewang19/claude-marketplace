@@ -1,6 +1,6 @@
 # Claude Marketplace
 
-通用性质的 Claude Code 插件市场。
+BreezeWang的 Claude Code 插件市场。
 
 ## 插件列表
 
