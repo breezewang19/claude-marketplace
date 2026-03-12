@@ -324,6 +324,11 @@ Prompt the user:
    - Clear judgment statements using "判定为'存在问题'" / "判定为'不存在问题'" / "判定为'缺少文书材料'"
    - Document names in 《》 format
 5. Use professional legal terminology
+6. **Infer information points** using the hybrid method:
+   - **Keyword matching**: Extract keywords (时间、时长、期限、编号、签名、盖章、审批、金额、状态等) from the description
+   - **Logic inversion**: Infer required data points from decision conditions (e.g., "超过12小时" implies need for duration/time data)
+   - Group inferred points by document type using 「」 format
+   - Only include points that can be inferred; do not fabricate
 
 ### If User Selects Guided Mode (B)
 
@@ -346,6 +351,11 @@ Present the 5 review patterns:
 4. Apply persistent questioning logic to ensure complete answers
 5. Generate structured content using the template's step structure
 6. Fill in placeholders with user's specific information
+7. **Infer information points** using the hybrid method:
+   - **Keyword matching**: Extract keywords (时间、时长、期限、编号、签名、盖章、审批、金额、状态等) from the user's answers
+   - **Logic inversion**: Infer required data points from decision conditions in the template
+   - Group inferred points by document type using 「」 format
+   - Only include points that can be inferred; do not fabricate
 
 #### Guided Mode: Persistent Questioning Framework
 
@@ -889,8 +899,30 @@ Present the complete generated content to the user:
 
 {document_types}
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+【推荐信息点清单】
+
+{inferred_information_points}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
+
+**Information Points Format:**
+
+The inferred_information_points should be formatted as:
+
+```
+从《文书名称1》抽取：
+- 「信息点1」
+- 「信息点2」
+
+从《文书名称2》抽取：
+- 「信息点3」
+- 「信息点4」
+```
+
+Group by document type, use 「」 brackets for each point, and only include points that can be inferred from the review logic.
 
 ### 6.2 Review Questions
 
@@ -1275,6 +1307,16 @@ Create the final checkpoint document file.
 {review_steps}
 
 {document_types}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+【推荐信息点清单】
+
+{inferred_information_points}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⚠️ 免责声明：AI可能产生错误，请人工核实
 ```
 
 3. Important: Do NOT include these headers (Python program adds them automatically):
