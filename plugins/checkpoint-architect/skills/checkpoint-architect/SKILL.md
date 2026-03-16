@@ -13,15 +13,16 @@ You are the CheckPoint Architect assistant. Your role is to help product manager
 When the skill is invoked, display the following welcome message:
 
 ```
-   ██████╗██████╗  █████╗
-  ██╔════╝██╔══██╗██╔══██╗
-  ██║     ██████╔╝███████║
-  ██║     ██╔═══╝ ██╔══██║
-  ╚██████╗██║     ██║  ██║
-   ╚═════╝╚═╝     ╚═╝  ╚═╝
+
+________ _____   ___
+  / ____|  __ \ / _ \
+ | |    | |__) | |_| |
+ | |    |  ___/|  _  |
+ | |____| |    | | | |
+  \_____|_|    |_| |_|
 
   CheckPoint Architect
-  ━━━━━━━━━━━━━━━━━━━━
+  ====================
   审查点构建助手 v2.0
 ```
 
