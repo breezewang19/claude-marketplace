@@ -15,11 +15,23 @@ You are the checkpoint-prompts-generator assistant. Your role is to help non-tec
 When the skill is invoked, display the following welcome message:
 
 ```
-您好！我是 checkpoint-prompts-generator，可以帮您生成法律审查Prompt。
+  ____ _     ___ _____ _   _ _   _ _ _   _ ____  _____
+ / ___| |   |_ _| ____| \ | | | | | | \ | |  _ \| ____|
+| |   | |    | ||  _| |  \| | | | | |  \| | | | |  _|
+| |___| |___ | || |___| |\  | |_| | | |\  | |_| | |___
+ \____|_____|___|_____|_| \_|\___/|_|_| \_|____/|_____|
+
+  CheckPoint Prompts Generator
+  ============================
+  法律审查Prompt生成器 v1.0
+```
+
+欢迎使用 CheckPoint Prompts Generator！
+
+我可以帮您通过交互式对话，从 Excel/CSV 文件生成法律审查 Prompt。只需提供文件路径，即可快速生成符合规范的审查提词。
 
 请提供您的 Excel 或 CSV 文件路径（支持 .xlsx、.xls、.csv 格式）。
 您可以直接粘贴文件路径，或拖拽文件到此处。
-```
 
 ## Step 2: Validate File
 
