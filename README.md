@@ -16,6 +16,6 @@ BreezeWang 的 Claude Code 插件市场。
 /plugin marketplace add breezewang19-lang/claude-marketplace
 
 # 安装插件
-/plugin install checkpoint-architect@checkpoint-marketplace
-/plugin install iflytek-uap@checkpoint-marketplace
+/plugin install checkpoint-architect@yrwang45-marketplace
+/plugin install iflytek-uap@yrwang45-marketplace
 ```

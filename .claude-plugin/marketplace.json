@@ -1,11 +1,11 @@
 {
-  "name": "checkpoint-marketplace",
+  "name": "yrwang45-marketplace",
   "owner": {
-    "name": "CheckPoint Team",
+    "name": "yrwang45",
     "email": "your-email@example.com"
   },
   "metadata": {
-    "description": "审查点构建相关插件集合 - 帮助产品经理创建符合规范的审查点内容",
+    "description": "BreezeWang 的 Claude Code 插件市场",
     "version": "1.0.0",
     "pluginRoot": "./plugins"
   },
@@ -17,6 +17,15 @@
       "version": "2.0.0",
       "category": "productivity",
       "tags": ["审查点", "法律", "文档生成"],
+      "strict": true
+    },
+    {
+      "name": "iflytek-uap",
+      "source": "./plugins/iflytek-uap",
+      "description": "科大讯飞 UAP 统一认证平台集成助手",
+      "version": "1.0.0",
+      "category": "productivity",
+      "tags": ["UAP", "认证", "Spring Boot", "Vue3"],
       "strict": true
     }
   ]
