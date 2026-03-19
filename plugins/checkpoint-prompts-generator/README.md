@@ -1,6 +1,6 @@
 # checkpoint-prompts-generator
 
-法律审查Prompt生成器 - 帮助非技术人员通过对话调用法律审查Prompt生成脚本，从Excel/CSV文件生成法律审查长提词。
+审查要点Prompt生成器 - 帮助非技术人员通过对话调用法律审查Prompt生成脚本，从Excel/CSV文件生成法律审查长提词。
 
 ## 功能说明
 
