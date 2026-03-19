@@ -1,0 +1,9 @@
+{
+  "name": "iflytek-uap",
+  "description": "科大讯飞 UAP 统一认证平台集成助手 - 引导式集成 UAP 认证到项目中",
+  "version": "1.0.0",
+  "author": {
+    "name": "UAP Integration Team"
+  },
+  "license": "MIT"
+}
