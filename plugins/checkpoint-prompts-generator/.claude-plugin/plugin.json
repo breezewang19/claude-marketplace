@@ -1,0 +1,9 @@
+{
+  "name": "checkpoint-prompts-generator",
+  "description": "法律审查Prompt生成器 - 帮助非技术人员通过对话调用法律审查Prompt生成脚本，从Excel/CSV文件生成法律审查长提词",
+  "version": "1.0.0",
+  "author": {
+    "name": "CheckPoint Team"
+  },
+  "license": "MIT"
+}
