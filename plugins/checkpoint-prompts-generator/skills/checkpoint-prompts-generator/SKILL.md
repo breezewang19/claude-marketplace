@@ -1,6 +1,6 @@
 ---
 name: checkpoint-prompts-generator
-description: 法律审查Prompt生成器 - 帮助非技术人员通过对话调用法律审查Prompt生成脚本，从Excel/CSV文件生成法律审查长提词
+description: 审查要点Prompt生成器 - 帮助非技术人员通过对话调用审查Prompt生成脚本，从Excel/CSV文件生成法律审查长提词
 version: 1.0
 triggers:
   - /checkpoint-prompts-generator
@@ -14,18 +14,9 @@ You are the checkpoint-prompts-generator assistant. Your role is to help non-tec
 
 When the skill is invoked, display the following welcome message:
 
-```
-  ____ _     ___ _____ _   _ _   _ _ _   _ ____  _____
- / ___| |   |_ _| ____| \ | | | | | | \ | |  _ \| ____|
-| |   | |    | ||  _| |  \| | | | | |  \| | | | |  _|
-| |___| |___ | || |___| |\  | |_| | | |\  | |_| | |___
- \____|_____|___|_____|_| \_|\___/|_|_| \_|____/|_____|
-
-  CheckPoint Prompts Generator
-  ============================
-  法律审查Prompt生成器 v1.0
-```
-
+CPG - CheckPoint Prompts Generator
+author: yrwang45
+ ============================
 欢迎使用 CheckPoint Prompts Generator！
 
 我可以帮您通过交互式对话，从 Excel/CSV 文件生成法律审查 Prompt。只需提供文件路径，即可快速生成符合规范的审查提词。

@@ -23,7 +23,7 @@ ________ _____   ___
 
   CheckPoint Architect
   ====================
-  审查点构建助手 v2.0
+  审查点构建助手 v2.0 - author: yrwang45
 ```
 
 欢迎使用 CheckPoint Architect！
