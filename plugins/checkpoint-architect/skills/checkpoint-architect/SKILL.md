@@ -621,6 +621,126 @@ Once user confirms:
 4. Generate professional, structured checkpoint content
 5. Proceed to Step 5 (Generate Logic Diagram)
 
+### If User Selects Batch Mode (C)
+
+Batch mode processes all .md draft files in a user-specified directory automatically.
+
+#### 4C.1 Collect Directory Path
+
+Prompt the user:
+
+```
+请提供包含审查点草稿文件的目录路径：
+
+例如：/mnt/d/projects/TOY/CheckPoints/input
+
+注意：
+- 仅处理当前目录下的 .md 文件（不递归子目录）
+- 目录需存在且包含至少一个 .md 文件
+```
+"""
+
+#### 4C.2 Validate and Scan Directory
+
+After receiving the path:
+
+1. **Validate path exists**: If path does not exist or is not a directory, display:
+   ```
+   ❌ 路径不存在或不是有效目录，请检查后重新输入。
+   ```
+   Then ask for path again.
+
+2. **Scan for .md files**: List all `.md` files in the directory (non-recursive).
+   - If no `.md` files found, display:
+     ```
+     ❌ 该目录下未找到任何 .md 文件。
+     请确认目录路径是否正确，或将草稿文件放入该目录后重试。
+     ```
+     Then exit batch mode (return to Step 3).
+
+3. **Display found files and request confirmation**:
+   ```
+   📁 发现 {N} 个审查点草稿文件：
+
+   1. 文件名A.md
+   2. 文件名B.md
+   ...
+
+   是否开始批量处理？（输入"是"开始，输入其他取消）
+   ```
+
+#### 4C.3 Batch Processing Loop
+
+For each `.md` file in the directory, process sequentially:
+
+**For each file:**
+
+1. **Parse file content**
+   - Read the file content
+   - Extract `checkpoint_name`:
+     - Look for phrases containing: 是否、有无、合规、检查
+     - Fallback: first line of file or filename (strip `.md` suffix)
+     - Validate: 5-50 Chinese characters, non-empty
+   - Extract `document_types`:
+     - Find content in 《》 brackets
+     - Find words with: 证、书、表、单、函、通知
+     - Validate: at least one document type found
+   - Extract review logic:
+     - Identify steps, conditions, and conclusions from the text
+     - Convert to structured format (第一步/第二步/第三步)
+
+2. **Parse failure handling**
+   If any parse success condition fails:
+   - Record failure with reason: "无法识别审查点名称" / "无法识别文书类型" / "内容为空或无意义"
+   - Skip to next file (do not generate output)
+   - Continue processing remaining files
+
+3. **Execute generation pipeline** (on successful parse)
+   - Write extracted `checkpoint_name` and `document_types` to internal state
+   - **Apply Step 4A processing instructions** (SKILL.md lines 316-332):
+     - The parsed file content (审查逻辑 text) is treated as if the user had typed it in Quick Mode
+     - Skip the user prompt "请用自然语言描述审查逻辑：" and example display
+     - Apply all Processing Instructions (keyword matching, logic inversion, information points inference) using the parsed logic text as input
+   - Execute Step 5 (generate Mermaid + ASCII diagrams)
+   - Skip Step 6 (no interactive review in batch mode)
+   - Execute Step 7 (validation)
+     - If validation passes → continue to Step 8
+     - If validation fails → attempt auto-fix once; if still failing, mark as failed and skip
+   - Execute Step 8 (write output file)
+     - Output path: `/mnt/d/projects/TOY/CheckPoints/output/`
+     - Filename: `YYYY-MM-DD-{checkpoint_name}.md`
+     - If file already exists, append `-2`, `-3`, etc. to the checkpoint_name portion:
+       Example: `2026-03-20-传唤时长是否合规-2.md`
+
+4. **Track results**
+   Maintain a running tally:
+   - `batch_success_count`
+   - `batch_failure_count`
+   - `batch_success_list` (output file paths)
+   - `batch_failure_list` (input file paths + reasons)
+
+#### 4C.4 Display Batch Summary Report
+
+After all files are processed, display:
+
+```
+批量处理完成
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✅ 成功：{N} 个
+❌ 失败：{M} 个（已跳过）
+
+【成功列表】
+- /mnt/d/projects/TOY/CheckPoints/output/2026-03-20-审查点名称A.md
+- /mnt/d/projects/TOY/CheckPoints/output/2026-03-20-审查点名称B.md
+
+【失败列表】
+- /path/to/input/文件名.md - 原因：无法识别审查点名称
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+💡 对于失败的文件，建议使用快速模式（A）或引导模式（B）手动处理。
+```
+"""
+
 ## Step 5: Generate Logic Diagram
 
 After generating the checkpoint content, create visual representations to help users understand the review logic flow.
