@@ -638,7 +638,6 @@ Prompt the user:
 - 仅处理当前目录下的 .md 文件（不递归子目录）
 - 目录需存在且包含至少一个 .md 文件
 ```
-"""
 
 #### 4C.2 Validate and Scan Directory
 
@@ -739,7 +738,6 @@ After all files are processed, display:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 💡 对于失败的文件，建议使用快速模式（A）或引导模式（B）手动处理。
 ```
-"""
 
 ## Step 5: Generate Logic Diagram
 
