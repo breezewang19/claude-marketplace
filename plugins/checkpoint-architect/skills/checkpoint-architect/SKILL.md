@@ -1470,6 +1470,8 @@ Display the completion message:
 
 Ask the user if they want to create another checkpoint or exit.
 
+**Note:** When running in Batch Mode (C), the summary report is displayed during Step 4C processing (section 4C.4), not here. Step 9 is only reached for single-checkpoint creation via Mode A or B.
+
 ## Key Behaviors
 
 ### Mandatory Requirements
