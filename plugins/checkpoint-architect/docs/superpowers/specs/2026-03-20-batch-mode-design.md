@@ -67,6 +67,8 @@ C. 批量模式（Batch Mode）
   │   │   ├─ Step 5 生成流程图
   │   │   ├─ Step 6 跳过（批量模式不进行交互式审查）
   │   │   ├─ Step 7 验证
+  │   │   │   └─ 验证通过 → 继续 Step 8
+  │   │   │   └─ 验证失败 → 尝试自动修复；若修复后仍不通过，标记为失败并跳过
   │   │   └─ Step 8 输出文件到 /mnt/d/projects/TOY/CheckPoints/output/
   │   │
   │   └─ 解析失败 → 记录失败原因，跳过，继续下一个
@@ -104,11 +106,11 @@ C. 批量模式（Batch Mode）
 ❌ 失败：X 个（已跳过）
 
 【成功列表】
-- output/2026-03-20-审查点名称A.md
-- output/2026-03-20-审查点名称B.md
+- /mnt/d/projects/TOY/CheckPoints/output/2026-03-20-审查点名称A.md
+- /mnt/d/projects/TOY/CheckPoints/output/2026-03-20-审查点名称B.md
 
 【失败列表】
-- input/文件名.md - 原因：无法识别审查点名称
+- /path/to/input/文件名.md - 原因：无法识别审查点名称
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 💡 对于失败的文件，建议使用快速模式（A）或引导模式（B）手动处理。
