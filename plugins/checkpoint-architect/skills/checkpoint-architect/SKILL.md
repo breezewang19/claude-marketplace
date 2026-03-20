@@ -295,7 +295,13 @@ Present the user with two mode options:
 - 方式：我会根据常见审查模式提供模板和引导问题
 - 优点：结构清晰，适合新手用户
 
-**请选择模式：A 或 B**
+**C. 批量模式（Batch Mode）**
+- 适合：已有一批逻辑基本清晰的审查点草稿文件
+- 方式：指定目录，AI 自动解析并批量生成，无需交互
+- 💡 提示：批量模式适合快速处理大量草稿，但 AI 自动解析可能存在偏差。
+         若对准确性要求较高，建议使用快速模式（A）或引导模式（B）逐一处理。
+
+**请选择模式：A、B 或 C**
 
 Wait for the user's selection before proceeding.
 
