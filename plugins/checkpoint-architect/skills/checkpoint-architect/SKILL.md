@@ -1076,19 +1076,27 @@ Present the complete generated content to the user:
 
 **Information Points Format:**
 
-The inferred_information_points should be formatted as:
+优先使用 CSV 中定义的字段名作为信息点。若 CSV 中无该文书数据，则回退到从审查步骤中推断。
 
+优先格式（使用 CSV 字段）：
 ```
 从《文书名称1》抽取：
-- 「信息点1」
-- 「信息点2」
+- 「字段1」
+- 「字段2」
 
 从《文书名称2》抽取：
-- 「信息点3」
-- 「信息点4」
+- 「字段3」
+- 「字段4」
 ```
 
-Group by document type, use 「」 brackets for each point, and only include points that can be inferred from the review logic.
+回退格式（无 CSV 数据时）：
+```
+从《文书名称1》抽取：
+- 「从审查步骤推断的信息点1」
+- 「从审查步骤推断的信息点2」
+```
+
+Group by document type, use 「」 brackets for each point. Prefer CSV field names when available; only infer additional points when CSV data is insufficient.
 
 ### 6.2 Review Questions
 
