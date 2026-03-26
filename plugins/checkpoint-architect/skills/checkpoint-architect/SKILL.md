@@ -351,6 +351,12 @@ Prompt the user:
 - "如果超过24小时，直接判定存在问题"
 
 **Processing Instructions:**
+0. **CSV Lookup (for each document type):**
+   - Reference the CSV data as described in section 3.3
+   - Get the list of extractable fields for each document in `document_types`
+   - If CSV data found: note the fields for use in steps 2 and 6
+   - If NOT found: output warning per section 3.3
+
 1. Parse the user's natural language description
 2. Identify key steps, conditions, and decision points
 3. Transform into structured steps using the format:
@@ -362,11 +368,10 @@ Prompt the user:
    - Clear judgment statements using "判定为'存在问题'" / "判定为'不存在问题'" / "判定为'缺少文书材料'"
    - Document names in 《》 format
 5. Use professional legal terminology
-6. **Infer information points** using the hybrid method:
-   - **Keyword matching**: Extract keywords (时间、时长、期限、编号、签名、盖章、审批、金额、状态等) from the description
-   - **Logic inversion**: Infer required data points from decision conditions (e.g., "超过12小时" implies need for duration/time data)
-   - Group inferred points by document type using 「」 format
-   - Only include points that can be inferred; do not fabricate
+6. **Reference CSV fields for precision:**
+   - When describing conditions that check specific field values, reference the CSV field names exactly (e.g., "检查《处罚结论》字段是否为'罚款'" instead of vague "检查处罚结论")
+   - Use CSV fields as guidance for what information is extractable from each document
+   - Still apply judgment to select relevant fields for the specific review logic — do not mechanically include every CSV field
 
 ### If User Selects Guided Mode (B)
 
