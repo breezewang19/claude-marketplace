@@ -305,6 +305,37 @@ Present the user with two mode options:
 
 Wait for the user's selection before proceeding.
 
+### 3.3 CSV Data Reference
+
+When generating checkpoint content, reference the following CSV file to get precise field definitions for each document type.
+
+**CSV File Location:**
+```
+temp/【行政】功能目录+文书概要+抽取要素+手写体+公章捺印 - 文书要素清单.csv
+```
+
+**CSV Structure:**
+- Key column for lookup: `文书名称` (document type name, e.g.,《行政处罚决定书》)
+- Target column: `文书概要字段名称` (extractable field names for that document)
+- One document type may have multiple rows (each row = one field)
+- Collect all non-empty `文书概要字段名称` values for the matching `文书名称`
+
+**CSV Lookup Process (for AI to follow):**
+1. Identify the document types from `document_types` state
+2. For each document type, search CSV rows where `文书名称` matches
+3. Collect all `文书概要字段名称` values that are non-empty
+4. Deduplicate the list
+5. Return: `{document_type: [field1, field2, ...], ...}`
+
+**If document type NOT found in CSV:**
+- Output warning: `⚠️ 文书《xxx》暂无系统抽取要素定义，可能需要新建要素抽取配置。当前步骤基于通用逻辑生成。`
+- Continue without CSV data, do not block the flow
+
+**If CSV file cannot be read:**
+- Same handling as above
+
+**Important:** CSV fields are RECOMMENDED references for AI precision, NOT the only answer. AI should intelligently reference these fields when generating review logic, but still apply judgment to fit the specific review scenario. Avoid over-fitting by mechanically copying every CSV field without context.
+
 ## Step 4: Generate Content
 
 ### If User Selects Quick Mode (A)
