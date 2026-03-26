@@ -388,17 +388,22 @@ Present the 5 review patterns:
 **请告诉我你的审查点属于哪种模式（1-5）？**
 
 **Processing Instructions:**
+0. **CSV Lookup (for each document type):**
+   - Reference the CSV data as described in section 3.3
+   - Get the list of extractable fields for each document in `document_types`
+   - If CSV data found: note the fields for use in steps 5 and 7
+   - If NOT found: output warning per section 3.3
+
 1. Wait for the user's pattern selection
 2. Retrieve the corresponding template from checkpoint-templates.md
 3. Present the guided questions from the template ONE AT A TIME
 4. Apply persistent questioning logic to ensure complete answers
 5. Generate structured content using the template's step structure
 6. Fill in placeholders with user's specific information
-7. **Infer information points** using the hybrid method:
-   - **Keyword matching**: Extract keywords (时间、时长、期限、编号、签名、盖章、审批、金额、状态等) from the user's answers
-   - **Logic inversion**: Infer required data points from decision conditions in the template
-   - Group inferred points by document type using 「」 format
-   - Only include points that can be inferred; do not fabricate
+7. **Reference CSV fields for precision:**
+   - When describing conditions that check specific field values, reference the CSV field names exactly
+   - Use CSV fields as guidance for what information is extractable from each document
+   - Still apply judgment to select relevant fields for the specific review logic — do not mechanically include every CSV field
 
 #### Guided Mode: Persistent Questioning Framework
 
