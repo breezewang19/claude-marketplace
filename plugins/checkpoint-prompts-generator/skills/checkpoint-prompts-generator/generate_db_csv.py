@@ -12697,12 +12697,13 @@ def generate_placeholder_prompt(stage_name: str, group_df):
     return final_prompt
 
 
-def load_template_data(template_path=None):
+def load_template_data(template_path=None, case_type=None):
     """
-    加载模板数据。如果提供了template_path，从文件加载；否则使用内置数据。
+    加载模板数据。如果提供了template_path，从文件加载；否则根据case_type从data目录加载。
 
     Args:
         template_path: 可选的模板CSV文件路径
+        case_type: 案件类型 "xs"(刑事) 或 "xz"(行政)
 
     Returns:
         模板数据列表
@@ -12710,13 +12711,29 @@ def load_template_data(template_path=None):
     if template_path and os.path.exists(template_path):
         df = pd.read_csv(template_path, encoding='utf-8')
         return df.to_dict('records')
+
+    # 根据案件类型从data目录加载对应模板
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    data_dir = os.path.join(script_dir, "data")
+
+    if case_type == 'xs':
+        template_file = os.path.join(data_dir, "xs_dzjz_scyd_prompt_pzxx_template.csv")
+    elif case_type == 'xz':
+        template_file = os.path.join(data_dir, "xz_dzjz_scyd_prompt_pzxx_template.csv")
     else:
-        # 使用内置模板数据
+        # 兼容：无case_type时使用内置数据
+        return TEMPLATE_DATA.copy()
+
+    if os.path.exists(template_file):
+        df = pd.read_csv(template_file, encoding='utf-8')
+        return df.to_dict('records')
+    else:
+        print(f"警告：模板文件不存在 '{template_file}'，使用内置数据")
         return TEMPLATE_DATA.copy()
 
 
 def generate_db_csv(excel_path: str, output_dir: str, version: str,
-                    txt_dir=None, template_path=None):
+                    txt_dir=None, template_path=None, case_type=None):
     """
     主函数：从Excel生成数据库导入用的CSV文件。
 
@@ -12730,9 +12747,13 @@ def generate_db_csv(excel_path: str, output_dir: str, version: str,
     Returns:
         统计信息字典
     """
-    # 1. 读取Excel数据
+    # 1. 读取数据文件（支持Excel和CSV）
     try:
-        df = pd.read_excel(excel_path)
+        ext = os.path.splitext(excel_path)[1].lower()
+        if ext == '.csv':
+            df = pd.read_csv(excel_path, encoding='utf-8')
+        else:
+            df = pd.read_excel(excel_path)
     except FileNotFoundError:
         print(f"错误：找不到文件 '{excel_path}'")
         return {"error": "File not found"}
@@ -12770,7 +12791,7 @@ def generate_db_csv(excel_path: str, output_dir: str, version: str,
         return {"error": "Empty data"}
 
     # 3. 加载模板数据
-    template_data = load_template_data(template_path)
+    template_data = load_template_data(template_path, case_type)
     print(f"加载模板数据: {len(template_data)} 条记录")
 
     # 4. 创建输出目录
@@ -12837,7 +12858,14 @@ def generate_db_csv(excel_path: str, output_dir: str, version: str,
 
     # 7. 输出CSV文件
     timestamp = datetime.now().strftime("%Y%m%d%H%M")
-    output_filename = f"aj_dzjz_scyd_prompt_pzxx_{timestamp}.csv"
+    # 根据案件类型设置文件名前缀
+    if case_type == 'xs':
+        prefix = "xs_dzjz_scyd_prompt_pzxx"
+    elif case_type == 'xz':
+        prefix = "xz_dzjz_scyd_prompt_pzxx"
+    else:
+        prefix = "aj_dzjz_scyd_prompt_pzxx"
+    output_filename = f"{prefix}_{timestamp}.csv"
     output_path = os.path.join(versioned_output_dir, output_filename)
 
     # 转换为DataFrame并保存
@@ -12917,6 +12945,14 @@ def parse_arguments():
         help='模板CSV路径（可选，默认使用内置模板）'
     )
 
+    parser.add_argument(
+        '--case-type',
+        type=str,
+        choices=['xs', 'xz'],
+        default=None,
+        help='案件类型：xs=刑事, xz=行政（选择对应的模板数据）'
+    )
+
     return parser.parse_args()
 
 
@@ -12937,6 +12973,9 @@ def main():
         print(f"TXT目录: {args.txt_dir}")
     if args.template:
         print(f"模板文件: {args.template}")
+    if args.case_type:
+        case_label = "刑事" if args.case_type == "xs" else "行政"
+        print(f"案件类型: {case_label} ({args.case_type})")
     print()
 
     # 检查Excel文件是否存在
@@ -12950,7 +12989,8 @@ def main():
         output_dir=args.output,
         version=args.version,
         txt_dir=args.txt_dir,
-        template_path=args.template
+        template_path=args.template,
+        case_type=args.case_type
     )
 
     if "error" not in stats:

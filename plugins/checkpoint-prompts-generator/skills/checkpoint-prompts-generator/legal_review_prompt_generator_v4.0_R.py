@@ -264,9 +264,13 @@ def generate_prompts_from_excel(excel_path, output_dir, version, use_excel_guida
         use_excel_guidance (bool): 是否使用Excel中的执法指引。
         use_placeholder_mode (bool): 是否使用占位符模式（只生成审查点，执法指引和待审查文书使用占位符）。
     """
-    # 1. 读取并预处理Excel数据
+    # 1. 读取并预处理数据文件（支持Excel和CSV）
     try:
-        df = pd.read_excel(excel_path)
+        ext = os.path.splitext(excel_path)[1].lower()
+        if ext == '.csv':
+            df = pd.read_csv(excel_path, encoding='utf-8')
+        else:
+            df = pd.read_excel(excel_path)
     except FileNotFoundError:
         print(f"错误：找不到文件 '{excel_path}'。请检查路径是否正确。")
         return
