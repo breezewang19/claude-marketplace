@@ -46,11 +46,17 @@ Display the confirmation message:
 正在使用【占位符模式】生成Prompt。
 建议将此Prompt发给研发同事确认是否需要补充法律依据和文书原文。
 
-是否继续生成？(y/n)
+请选择生成模式：
+A) 仅生成 .txt Prompt 文件
+B) 生成 .txt + 落库 CSV（推荐）
+C) 仅生成落库 CSV
+
+请输入选项 (A/B/C)：
 ```
 
-- User inputs `y` or `Y` → proceed to Step 5
-- User inputs `n` or `N` → display "已取消生成。如有需要，请重新调用。"
+- User inputs `A` → proceed to Step 5 (existing logic only)
+- User inputs `B` → proceed to Step 5 (existing logic + generate_db_csv.py)
+- User inputs `C` → skip Step 5 txt generation, call generate_db_csv.py directly
 
 ## Step 3b: Validation Failed
 
@@ -123,6 +129,37 @@ stderr = result.stderr
 
 **Execution Directory**: User's current working directory
 
+## Step 5b: Execute DB CSV Generator (Only for Mode B/C)
+
+When user selected Mode B or C in Step 4, execute the following after Step 5 (Mode B) or instead of Step 5 (Mode C):
+
+```python
+import subprocess
+import os
+
+script_dir = os.path.dirname(os.path.abspath(__file__))
+db_csv_script = os.path.join(script_dir, "generate_db_csv.py")
+
+cmd = [
+    "python",
+    db_csv_script,
+    "-f", excel_path,
+    "-o", "generated_prompts",
+    "-v", "v4.0_R"
+]
+
+# If Mode C and .txt files already exist from a previous run:
+if txt_dir_path:
+    cmd.extend(["-t", txt_dir_path])
+
+result = subprocess.run(
+    cmd,
+    capture_output=True,
+    text=True,
+    encoding='utf-8'
+)
+```
+
 ## Step 6a: Execution Success
 
 Display the success.md content:
@@ -140,6 +177,17 @@ Display the success.md content:
 
 💡 提示：占位符模式生成的Prompt已包含审查指令，
 建议将其发送给研发同事确认是否需要补充法律依据和文书原文。
+```
+
+For Mode B/C, additionally display the db_csv_success.md content:
+
+```
+📊 落库CSV已生成！
+
+📁 输出位置：[当前目录]/generated_prompts/version_v4.0_R/aj_dzjz_scyd_prompt_pzxx_{timestamp}.csv
+✅ 匹配成功：X/Y 行
+⚠️ 未匹配：Z 行（保持模板原值）
+  • 未匹配项：[DXCP_WSMC 列表]
 ```
 
 ## Step 6b: Execution Failed
@@ -161,6 +209,7 @@ This skill references the following prompt template files:
 - `prompts/validation.md` - Prompt template when file validation fails
 - `prompts/error_diagnosis.md` - Error diagnosis and fix options for Python script errors
 - `prompts/success.md` - Output prompt after successful generation
+- `prompts/db_csv_success.md` - Output prompt after successful DB CSV generation
 
 ## Technical Constraints
 
@@ -171,6 +220,10 @@ This skill references the following prompt template files:
 5. **Backup Strategy**: Only when user selects "auto-fix", format: original file path + `.backup_YYYYMMDD_HHMMSS`
 6. **Encoding**: Unified UTF-8 encoding for all file processing
 7. **Idempotency**: Same input should produce same output (except backup files)
+8. **DB CSV Script**: Path relative to Skill directory `generate_db_csv.py`
+9. **DB CSV Template**: Embedded in `generate_db_csv.py` as `TEMPLATE_DATA`, sourced from `aj_dzjz_scyd_prompt_pzxx_202604201447.csv`
+10. **DB CSV Matching**: `DXCP_WSMC` second segment (split by `-`) matched against Excel B column
+11. **DB CSV Output**: `aj_dzjz_scyd_prompt_pzxx_{timestamp}.csv` in versioned output directory
 
 ## Error Handling Flow
 
@@ -184,14 +237,18 @@ This skill references the following prompt template files:
   步骤3a         步骤3b
 (确认模式)     (显示错误选项)
     ↓               ↓
-  y/n              1/2
-    ↓               ↓
-   y → 执行脚本   1 → 修复并继续
-   n → 中止       2 → 中止
+  选择模式         1/2
+  A/B/C            ↓
+    ↓             1 → 修复并继续
+  A → 执行脚本   2 → 中止
+  B → 执行脚本+DB CSV
+  C → 仅执行DB CSV
         ↓
     执行脚本
         ↓
     ┌─── 成功 ───┐
     ↓           ↓
   success.md  error_diagnosis.md
+    ↓
+  (Mode B/C: db_csv_success.md)
 ```
