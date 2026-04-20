@@ -20,6 +20,15 @@
       "strict": true
     },
     {
+      "name": "checkpoint-prompts-generator",
+      "source": "./plugins/checkpoint-prompts-generator",
+      "description": "审查要点Prompt生成器 - 从Excel/CSV生成法律审查Prompt及落库CSV",
+      "version": "1.0.0",
+      "category": "productivity",
+      "tags": ["审查点", "法律", "Prompt生成", "落库"],
+      "strict": true
+    },
+    {
       "name": "iflytek-uap",
       "source": "./plugins/iflytek-uap",
       "description": "科大讯飞 UAP 统一认证平台集成助手",
