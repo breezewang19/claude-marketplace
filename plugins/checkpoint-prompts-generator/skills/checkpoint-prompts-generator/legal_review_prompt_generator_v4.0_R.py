@@ -347,21 +347,26 @@ def generate_prompts_from_excel(excel_path, output_dir, version, use_excel_guida
     ].copy()
 
     # 按案件类型过滤（基于B列"审查环节"内容）
+    # 行政案件：B列包含"行政"的保留
+    # 刑事案件：B列不包含"行政"的保留（刑事审查环节命名通常不含"刑事"关键词）
     if case_type != 'all':
-        if case_type == 'xz':
-            filter_keyword = '行政'
-        elif case_type == 'xs':
-            filter_keyword = '刑事'
-        else:
-            filter_keyword = None
+        original_count = len(df_processed)
 
-        if filter_keyword:
-            original_count = len(df_processed)
+        if case_type == 'xz':
+            # 行政：保留B列含"行政"的行
+            filter_keyword = '行政'
             df_processed = df_processed[
                 df_processed['审查环节'].astype(str).str.contains(filter_keyword, na=False)
             ].copy()
             filtered_count = len(df_processed)
-            print(f"  (案件类型过滤: {filter_keyword}, 原始{original_count}行 → 保留{filtered_count}行)")
+            print(f"  (案件类型过滤: 行政, 原始{original_count}行 → 保留{filtered_count}行)")
+        elif case_type == 'xs':
+            # 刑事：保留B列不含"行政"的行
+            df_processed = df_processed[
+                ~df_processed['审查环节'].astype(str).str.contains('行政', na=False)
+            ].copy()
+            filtered_count = len(df_processed)
+            print(f"  (案件类型过滤: 刑事[非行政], 原始{original_count}行 → 保留{filtered_count}行)")
 
     if df_processed.empty:
         print("错误：处理后的数据为空，请检查Excel文件内容。")
