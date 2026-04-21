@@ -12606,46 +12606,63 @@ AUDIT_POINT_TEMPLATE = """     审查点 {point_number}: {point_name}
 # 3. 核心功能函数 (Core Functions)
 # ==============================================================================
 
-def extract_second_segment(dxcp_wsmc: str) -> str:
-    """
-    从DXCP_WSMC提取第二段（审查环节）。
-    格式: 案件类型-审查环节-审查点名称
-    例如: "刑事-受(立)案情况-撤销案件决定书" -> "受(立)案情况"
-    """
-    if not dxcp_wsmc:
-        return ""
-    parts = dxcp_wsmc.split("-")
-    if len(parts) >= 2:
-        return parts[1]
-    return ""
+def normalize_stage_name(name: str) -> str:
+    """规范化审查环节名称，去除"环节"后缀和全角符号差异"""
+    name = name.strip()
+    # 去除"环节"后缀
+    if name.endswith("环节"):
+        name = name[:-2]
+    # 统一破折号
+    name = name.replace("——", "-").replace("—", "-")
+    return name
 
 
 def match_stage_name(excel_stage: str, dxcp_wsmc: str):
     """
-    匹配Excel中的审查环节与DXCP_WSMC中的第二段。
+    匹配Excel B列审查环节与DXCP_WSMC。
+
+    DXCP_WSMC格式: 案件类型-分类-子分类-...-审查点
+    例如: "刑事-程序审查-强制措施情况-刑事拘留环节"
+
+    匹配策略（按优先级）：
+    1. 去掉第一段(案件类型)，用tail与Excel B列精确匹配
+    2. 规范化后精确匹配（去除"环节"后缀、统一破折号）
+    3. 规范化后包含匹配（双向）
+    4. DXCP_WSMC的最后一段规范化后与Excel B列包含匹配
 
     Args:
         excel_stage: Excel B列的审查环节
         dxcp_wsmc: 数据库中的DXCP_WSMC字段值
 
     Returns:
-        (是否匹配, 匹配类型): 匹配类型为 "exact" 或 "substring" 或 "none"
+        (是否匹配, 匹配类型): 匹配类型为 "exact" / "normalized" / "substring" / "none"
     """
     if not excel_stage or not dxcp_wsmc:
         return False, "none"
 
     excel_stage = excel_stage.strip()
-    second_segment = extract_second_segment(dxcp_wsmc).strip()
+    parts = dxcp_wsmc.split("-")
 
-    if not excel_stage or not second_segment:
-        return False, "none"
+    # 去掉第一段(案件类型)，得到tail
+    tail = "-".join(parts[1:]) if len(parts) > 1 else dxcp_wsmc
+    norm_excel = normalize_stage_name(excel_stage)
+    norm_tail = normalize_stage_name(tail)
 
-    # 精确匹配
-    if excel_stage == second_segment:
+    # 1. tail精确匹配
+    if excel_stage == tail:
         return True, "exact"
 
-    # 子字符串匹配（双向检查）
-    if excel_stage in second_segment or second_segment in excel_stage:
+    # 2. 规范化后精确匹配
+    if norm_excel == norm_tail:
+        return True, "normalized"
+
+    # 3. 规范化后包含匹配（双向）
+    if norm_excel in norm_tail or norm_tail in norm_excel:
+        return True, "substring"
+
+    # 4. 最后一段规范化后与Excel B列包含匹配
+    last_segment = normalize_stage_name(parts[-1]) if parts else ""
+    if last_segment and (last_segment in norm_excel or norm_excel in last_segment):
         return True, "substring"
 
     return False, "none"
