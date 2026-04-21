@@ -14,7 +14,7 @@ BreezeWang 的 Claude Code 插件市场。
 
 ```bash
 # 添加市场
-/plugin marketplace add breezewang19-lang/claude-marketplace
+/plugin marketplace add breezewang19/claude-marketplace
 
 # 安装插件
 /plugin install checkpoint-architect@yrwang45-marketplace
