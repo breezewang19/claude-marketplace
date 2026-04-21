@@ -26,6 +26,43 @@ from datetime import datetime
 from typing import List, Dict, Optional, Tuple
 
 # ==============================================================================
+# 0. 编码Fallback函数 (Encoding Fallback Function)
+# ==============================================================================
+
+def read_file_with_encoding_fallback(file_path):
+    """
+    使用编码fallback链读取CSV文件。
+
+    尝试顺序：utf-8-sig → utf-8 → gbk → gb18030
+
+    Args:
+        file_path: 文件路径
+
+    Returns:
+        pandas.DataFrame: 读取的数据
+
+    Raises:
+        ValueError: 所有编码尝试失败时
+    """
+    ext = os.path.splitext(file_path)[1].lower()
+    encodings = ['utf-8-sig', 'utf-8', 'gbk', 'gb18030']
+
+    for encoding in encodings:
+        try:
+            if ext == '.csv':
+                df = pd.read_csv(file_path, encoding=encoding)
+            else:
+                df = pd.read_excel(file_path)
+            print(f"  (检测到文件编码: {encoding})")
+            return df
+        except UnicodeDecodeError:
+            continue
+        except Exception as e:
+            raise e
+
+    raise ValueError(f"无法以支持的编码读取文件: {file_path}")
+
+# ==============================================================================
 # 1. 内置模板数据 (Embedded Template Data)
 # ==============================================================================
 
@@ -12726,8 +12763,11 @@ def load_template_data(template_path=None, case_type=None):
         模板数据列表
     """
     if template_path and os.path.exists(template_path):
-        df = pd.read_csv(template_path, encoding='utf-8')
-        return df.to_dict('records')
+        try:
+            df = read_file_with_encoding_fallback(template_path)
+            return df.to_dict('records')
+        except Exception as e:
+            print(f"警告：读取模板文件失败: {e}")
 
     # 根据案件类型从data目录加载对应模板
     script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -12742,8 +12782,12 @@ def load_template_data(template_path=None, case_type=None):
         return TEMPLATE_DATA.copy()
 
     if os.path.exists(template_file):
-        df = pd.read_csv(template_file, encoding='utf-8')
-        return df.to_dict('records')
+        try:
+            df = read_file_with_encoding_fallback(template_file)
+            return df.to_dict('records')
+        except Exception as e:
+            print(f"警告：读取模板文件失败: {e}，使用内置数据")
+            return TEMPLATE_DATA.copy()
     else:
         print(f"警告：模板文件不存在 '{template_file}'，使用内置数据")
         return TEMPLATE_DATA.copy()
@@ -12764,18 +12808,17 @@ def generate_db_csv(excel_path: str, output_dir: str, version: str,
     Returns:
         统计信息字典
     """
-    # 1. 读取数据文件（支持Excel和CSV）
+    # 1. 读取数据文件（支持Excel和CSV，带编码fallback）
     try:
-        ext = os.path.splitext(excel_path)[1].lower()
-        if ext == '.csv':
-            df = pd.read_csv(excel_path, encoding='utf-8')
-        else:
-            df = pd.read_excel(excel_path)
+        df = read_file_with_encoding_fallback(excel_path)
     except FileNotFoundError:
         print(f"错误：找不到文件 '{excel_path}'")
         return {"error": "File not found"}
+    except ValueError as e:
+        print(f"错误：{e}")
+        return {"error": str(e)}
     except Exception as e:
-        print(f"读取Excel文件时发生错误: {e}")
+        print(f"读取文件时发生错误: {e}")
         return {"error": str(e)}
 
     if len(df.columns) < 7:

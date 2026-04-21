@@ -24,6 +24,45 @@ import pandas as pd
 import argparse
 
 # ==============================================================================
+# 0. 编码Fallback函数 (Encoding Fallback Function)
+# ==============================================================================
+
+def read_file_with_encoding_fallback(file_path):
+    """
+    使用编码fallback链读取CSV文件。
+
+    尝试顺序：utf-8-sig → utf-8 → gbk → gb18030
+
+    Args:
+        file_path: 文件路径
+
+    Returns:
+        pandas.DataFrame: 读取的数据
+
+    Raises:
+        ValueError: 所有编码尝试失败时
+    """
+    ext = os.path.splitext(file_path)[1].lower()
+    encodings = ['utf-8-sig', 'utf-8', 'gbk', 'gb18030']
+
+    for encoding in encodings:
+        try:
+            if ext == '.csv':
+                df = pd.read_csv(file_path, encoding=encoding)
+            else:
+                # Excel文件不需要编码参数
+                df = pd.read_excel(file_path)
+            print(f"  (检测到文件编码: {encoding})")
+            return df
+        except UnicodeDecodeError:
+            continue
+        except Exception as e:
+            # 非编码错误直接抛出
+            raise e
+
+    raise ValueError(f"无法以支持的编码读取文件: {file_path}。尝试过: {', '.join(encodings)}")
+
+# ==============================================================================
 # 1. 常量定义 (Constants)
 # ==============================================================================
 
@@ -253,7 +292,7 @@ AUDIT_POINT_TEMPLATE = """     审查点 {point_number}: {point_name}
 # 3. 核心功能函数 (Core Functions)
 # ==============================================================================
 
-def generate_prompts_from_excel(excel_path, output_dir, version, use_excel_guidance, use_placeholder_mode=False):
+def generate_prompts_from_excel(excel_path, output_dir, version, use_excel_guidance, use_placeholder_mode=False, case_type='all'):
     """
     从Excel文件生成审查Prompt。
 
@@ -263,19 +302,19 @@ def generate_prompts_from_excel(excel_path, output_dir, version, use_excel_guida
         version (str): 版本信息，用于命名。
         use_excel_guidance (bool): 是否使用Excel中的执法指引。
         use_placeholder_mode (bool): 是否使用占位符模式（只生成审查点，执法指引和待审查文书使用占位符）。
+        case_type (str): 案件类型过滤，'xs'=刑事, 'xz'=行政, 'all'=全部。
     """
-    # 1. 读取并预处理数据文件（支持Excel和CSV）
+    # 1. 读取并预处理数据文件（支持Excel和CSV，带编码fallback）
     try:
-        ext = os.path.splitext(excel_path)[1].lower()
-        if ext == '.csv':
-            df = pd.read_csv(excel_path, encoding='utf-8')
-        else:
-            df = pd.read_excel(excel_path)
+        df = read_file_with_encoding_fallback(excel_path)
     except FileNotFoundError:
         print(f"错误：找不到文件 '{excel_path}'。请检查路径是否正确。")
         return
+    except ValueError as e:
+        print(f"错误：{e}")
+        return
     except Exception as e:
-        print(f"读取Excel文件时发生错误: {e}")
+        print(f"读取文件时发生错误: {e}")
         return
 
     if len(df.columns) < 7:
@@ -306,6 +345,23 @@ def generate_prompts_from_excel(excel_path, output_dir, version, use_excel_guida
         (df_processed['审查环节'].str.strip() != '') |
         (df_processed['审查点名称'].str.strip() != '')
     ].copy()
+
+    # 按案件类型过滤（基于B列"审查环节"内容）
+    if case_type != 'all':
+        if case_type == 'xz':
+            filter_keyword = '行政'
+        elif case_type == 'xs':
+            filter_keyword = '刑事'
+        else:
+            filter_keyword = None
+
+        if filter_keyword:
+            original_count = len(df_processed)
+            df_processed = df_processed[
+                df_processed['审查环节'].astype(str).str.contains(filter_keyword, na=False)
+            ].copy()
+            filtered_count = len(df_processed)
+            print(f"  (案件类型过滤: {filter_keyword}, 原始{original_count}行 → 保留{filtered_count}行)")
 
     if df_processed.empty:
         print("错误：处理后的数据为空，请检查Excel文件内容。")
@@ -534,6 +590,14 @@ def parse_arguments():
         help='使用标准模式：生成完整的提示词，包含执法指引和待审查文书占位符'
     )
 
+    parser.add_argument(
+        '--case-type',
+        type=str,
+        choices=['xs', 'xz', 'all'],
+        default='all',
+        help='案件类型：xs=刑事, xz=行政, all=全部（默认：all）'
+    )
+
     return parser.parse_args()
 
 
@@ -572,6 +636,9 @@ def main():
         print(f"   生成模式: 占位符模式（只生成审查点，执法指引和待审查文书使用占位符）")
     else:
         print(f"   执法指引: {'使用Excel中的内容' if USE_EXCEL_GUIDANCE else '留空待自定义'}")
+    if args.case_type != 'all':
+        case_label = "刑事" if args.case_type == "xs" else "行政"
+        print(f"   案件类型: {case_label} ({args.case_type})")
     print()
 
     # 检查Excel文件是否存在
@@ -581,7 +648,7 @@ def main():
         return
 
     # 执行主函数
-    generate_prompts_from_excel(EXCEL_FILE_PATH, OUTPUT_FOLDER, VERSION, USE_EXCEL_GUIDANCE, USE_PLACEHOLDER_MODE)
+    generate_prompts_from_excel(EXCEL_FILE_PATH, OUTPUT_FOLDER, VERSION, USE_EXCEL_GUIDANCE, USE_PLACEHOLDER_MODE, args.case_type)
 
     print("\n" + "=" * 60)
     print("🎉 所有 Prompt 已生成完毕！")

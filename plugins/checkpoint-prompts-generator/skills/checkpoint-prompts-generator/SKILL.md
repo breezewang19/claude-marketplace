@@ -22,11 +22,17 @@ author: yrwang45
 我可以帮您通过交互式对话，从 Excel/CSV 文件生成法律审查 Prompt。只需提供文件路径，即可快速生成符合规范的审查提词。
 
 请提供您的 Excel 或 CSV 文件路径（支持 .xlsx、.xls、.csv 格式）。
-您可以直接粘贴文件路径，或拖拽文件到此处。
+您可以：
+- 提供单个文件路径
+- 同时提供行政和刑事两个文件（用空格或逗号分隔）
+
+示例：
+- 单文件：d:\data\行政审查点+审查规则.csv
+- 双文件：d:\data\行政审查点.csv d:\data\刑事审查点.csv
 
 ## Step 2: Validate File
 
-When the user provides a file path, perform the following validation checks:
+When the user provides file path(s), perform the following validation checks:
 
 | 检查项 | 验证方法 | 要求 |
 |--------|----------|------|
@@ -36,15 +42,41 @@ When the user provides a file path, perform the following validation checks:
 | B-G列非空 | `df.iloc[:, 1:7].notna().any().any()` | 必须通过 |
 | 数据内容相似度 | 检查B列是否包含"审查"、"环节"等关键词 | 警告性检查 |
 
+**案件类型推断**：
+- 从文件名推断：文件名含"行政"→ xz，含"刑事"→ xs
+- 无法推断时：提示用户选择
+
+**双文件处理**：
+- 如果用户提供两个文件路径，分别验证
+- 推断各自的案件类型
+
 ## Step 3a: Validation Passed
 
 Display the confirmation message:
 
+**单文件时：**
 ```
 ✅ 文件验证通过！
 
+检测到案件类型：{行政/刑事}
 正在使用【占位符模式】生成Prompt。
-建议将此Prompt发给研发同事确认是否需要补充法律依据和文书原文。
+
+请选择生成模式：
+A) 仅生成 .txt Prompt 文件
+B) 生成 .txt + 落库 CSV（推荐）
+C) 仅生成落库 CSV
+
+请输入选项 (A/B/C)：
+```
+
+**双文件时：**
+```
+✅ 文件验证通过！
+
+文件1：{文件名1} → {案件类型1}
+文件2：{文件名2} → {案件类型2}
+
+正在使用【占位符模式】生成Prompt。
 
 请选择生成模式：
 A) 仅生成 .txt Prompt 文件
@@ -107,20 +139,31 @@ from datetime import datetime
 script_dir = os.path.dirname(os.path.abspath(__file__))
 script_path = os.path.join(script_dir, "legal_review_prompt_generator_v4.0_R.py")
 
-cmd = [
-    "python",
-    script_path,
-    "-f", excel_path,
-    "-o", "generated_prompts",
-    "-v", "v4.0_R"
-]
+# 设置环境变量确保UTF-8输出
+env = {**os.environ, 'PYTHONIOENCODING': 'utf-8'}
 
-result = subprocess.run(
-    cmd,
-    capture_output=True,
-    text=True,
-    encoding='utf-8'
-)
+def run_generator(excel_path, case_type):
+    """执行单个文件的Prompt生成"""
+    cmd = [
+        "python",
+        script_path,
+        "-f", excel_path,
+        "-o", "generated_prompts",
+        "-v", "v4.0_R",
+        "--case-type", case_type
+    ]
+
+    result = subprocess.run(
+        cmd,
+        capture_output=True,
+        text=True,
+        encoding='utf-8',
+        env=env
+    )
+    return result
+
+# 单文件执行
+result = run_generator(excel_path, case_type)
 
 returncode = result.returncode
 stdout = result.stdout
@@ -128,6 +171,45 @@ stderr = result.stderr
 ```
 
 **Execution Directory**: User's current working directory
+
+## Step 5a: Execute for Dual Files (Only When Two Files Provided)
+
+When user provided two files, execute the generator twice:
+
+```python
+# 双文件执行
+results = []
+for file_info in files:
+    result = run_generator(file_info['path'], file_info['case_type'])
+    results.append({
+        'file': file_info['path'],
+        'case_type': file_info['case_type'],
+        'returncode': result.returncode,
+        'stdout': result.stdout,
+        'stderr': result.stderr
+    })
+
+# 检查所有执行结果
+all_success = all(r['returncode'] == 0 for r in results)
+```
+
+**双文件 Mode B/C 落库CSV合并**：
+
+```python
+# 合并两个落库CSV
+import pandas as pd
+
+csv_files = [
+    os.path.join(output_dir, f"aj_dzjz_scyd_prompt_pzxx_{timestamp1}.csv"),
+    os.path.join(output_dir, f"aj_dzjz_scyd_prompt_pzxx_{timestamp2}.csv")
+]
+
+dfs = [pd.read_csv(f, encoding='utf-8') for f in csv_files if os.path.exists(f)]
+if len(dfs) == 2:
+    merged_df = pd.concat(dfs, ignore_index=True)
+    merged_output = os.path.join(output_dir, f"aj_dzjz_scyd_prompt_pzxx_{final_timestamp}.csv")
+    merged_df.to_csv(merged_output, index=False, encoding='utf-8')
+```
 
 ## Step 5b: Execute DB CSV Generator (Only for Mode B/C)
 
@@ -140,12 +222,16 @@ import os
 script_dir = os.path.dirname(os.path.abspath(__file__))
 db_csv_script = os.path.join(script_dir, "generate_db_csv.py")
 
+# 设置环境变量确保UTF-8输出
+env = {**os.environ, 'PYTHONIOENCODING': 'utf-8'}
+
 cmd = [
     "python",
     db_csv_script,
     "-f", excel_path,
     "-o", "generated_prompts",
-    "-v", "v4.0_R"
+    "-v", "v4.0_R",
+    "--case-type", case_type  # 添加案件类型参数
 ]
 
 # If Mode C and .txt files already exist from a previous run:
@@ -156,7 +242,8 @@ result = subprocess.run(
     cmd,
     capture_output=True,
     text=True,
-    encoding='utf-8'
+    encoding='utf-8',
+    env=env
 )
 ```
 
@@ -224,13 +311,19 @@ This skill references the following prompt template files:
 9. **DB CSV Template**: Embedded in `generate_db_csv.py` as `TEMPLATE_DATA`, sourced from `aj_dzjz_scyd_prompt_pzxx_202604201447.csv`
 10. **DB CSV Matching**: `DXCP_WSMC` second segment (split by `-`) matched against Excel B column
 11. **DB CSV Output**: `aj_dzjz_scyd_prompt_pzxx_{timestamp}.csv` in versioned output directory
+12. **案件类型推断**: 从文件名自动推断，含"行政"→xz，含"刑事"→xs
+13. **双文件支持**: 支持同时处理行政和刑事两个文件，输出到同一目录
+14. **Subprocess编码**: 调用Python脚本时设置 `PYTHONIOENCODING=utf-8` 环境变量
+15. **文件读取编码**: 脚本内部使用编码fallback链：utf-8-sig → utf-8 → gbk → gb18030
 
 ## Error Handling Flow
 
 ```
-用户输入文件路径
+用户输入文件路径（1个或2个）
         ↓
     验证文件
+        ↓
+    推断案件类型
         ↓
     ┌─── 验证通过 ───┐
     ↓               ↓
@@ -240,11 +333,14 @@ This skill references the following prompt template files:
   选择模式         1/2
   A/B/C            ↓
     ↓             1 → 修复并继续
-  A → 执行脚本   2 → 中止
-  B → 执行脚本+DB CSV
-  C → 仅执行DB CSV
-        ↓
-    执行脚本
+  单文件？       2 → 中止
+    ↓
+  ┌─是─┐  ┌─否─┐
+  ↓       ↓
+执行1次  执行2次
+带case-type 分别带case-type
+  ↓       ↓
+  └───→ 合并输出 ←───┘
         ↓
     ┌─── 成功 ───┐
     ↓           ↓
