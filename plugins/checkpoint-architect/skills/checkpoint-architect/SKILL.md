@@ -1,7 +1,7 @@
 ---
 name: checkpoint-architect
-description: 审查点构建助手 - 帮助产品经理通过引导式对话创建符合规范的审查点内容
-version: 2.0
+description: 审查点构建助手 - 引导式对话创建合规审查点内容
+version: 2.2
 ---
 
 # Instructions for Claude
