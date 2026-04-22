@@ -476,7 +476,15 @@ def generate_prompts_from_excel(excel_path, output_dir, version, use_excel_guida
             c for c in stage_name if c.isalnum() or c in ['_', '-', '(', ')']
         ) or f"stage_{len(audit_points_list)}_points"
 
-        output_filename = f"Prompt_{safe_filename}_{version}.txt"
+        # 根据案件类型添加后缀
+        if case_type == 'xs':
+            case_suffix = '刑事'
+        elif case_type == 'xz':
+            case_suffix = '行政'
+        else:
+            case_suffix = ''
+
+        output_filename = f"Prompt_{safe_filename}_{case_suffix}_{version}.txt" if case_suffix else f"Prompt_{safe_filename}_{version}.txt"
         output_path = os.path.join(versioned_output_dir, output_filename)
 
         try:
