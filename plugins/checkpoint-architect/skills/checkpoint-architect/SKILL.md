@@ -91,8 +91,7 @@ When generating checkpoint content, reference the appropriate CSV file based on 
 - 刑事案件: `data/【刑事】功能目录+文书概要+抽取要素+手写体+公章捺印 - 文书要素清单.csv`
 
 **CSV Structure:**
-- Key column: `文书名称` (document type name, both CSVs)
-- Target column: `文书概要字段名称` (admin CSV) / `抽取要素` (criminal CSV)
+- Both CSVs have the same 2-column structure: `文书名称` + `字段名称`
 - One document type may have multiple rows (each row = one field)
 
 **Case Type Determination:**
@@ -102,7 +101,7 @@ When generating checkpoint content, reference the appropriate CSV file based on 
 **CSV Lookup Process:**
 1. Determine case type (行政/刑事) and select the corresponding CSV
 2. For each document type in `document_types`, search CSV rows where `文书名称` matches
-3. Collect all non-empty field values from the target column, deduplicate
+3. Collect all non-empty `字段名称` values, deduplicate
 4. Return: `{document_type: [field1, field2, ...], ...}`
 
 **If document type NOT found in CSV:**
